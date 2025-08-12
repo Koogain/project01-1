@@ -1,0 +1,10 @@
+subjectCODE: 001 / subjectNAME: 행복 수업 / professorNAME: 행복이 / subjectCATE: 전공 / WEEK: 수요일 / TIME: 09 : 00 ~ 10 : 00
+subjectCODE: 002 / subjectNAME: 하늘 보기 / professorNAME: 곰곰 / subjectCATE: 교양 / WEEK: 금요일 / TIME: 13 : 00 ~ 14 : 00
+subjectCODE: 003 / subjectNAME: 간식 먹기 / professorNAME: 냠냠 / subjectCATE: 전공 / WEEK: 월요일 / TIME: 10 : 00 ~ 11 : 00
+subjectCODE: 004 / subjectNAME: 책 보기 / professorNAME: 북북 / subjectCATE: 전공 / WEEK: 금요일 / TIME: 13 : 00 ~ 14 : 00
+subjectCODE: 005 / subjectNAME: 산책 하기 / professorNAME: 워키 / subjectCATE: 교양 / WEEK: 화요일 / TIME: 17 : 00 ~ 18 : 00
+subjectCODE: 006 / subjectNAME: 컴퓨터 / professorNAME: 컴컴 / subjectCATE: 전공 / WEEK: 목요일 / TIME: 16 : 00 ~ 17 : 00
+subjectCODE: 007 / subjectNAME: 에어팟 찾기 / professorNAME: 에이 / subjectCATE: 전공 / WEEK: 목요일 / TIME: 12 : 00 ~ 13 : 00
+subjectCODE: 008 / subjectNAME: 춤추기 / professorNAME: 씰룩 / subjectCATE: 교양 / WEEK: 월요일 / TIME: 11 : 00 ~ 12 : 00
+subjectCODE: 009 / subjectNAME: 달리기 / professorNAME: 썡썡 / subjectCATE: 전공 / WEEK: 화요일 / TIME: 14 : 00 ~ 15 : 00
+subjectCODE: 010 / subjectNAME: 명상 / professorNAME: 잠잠 / subjectCATE: 교양 / WEEK: 수요일 / TIME: 16 : 00 ~ 17 : 00
