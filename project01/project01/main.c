@@ -31,12 +31,12 @@ void handleMainMenuScreen(const char* userName, const char* userID, const char* 
 int getDayIndex(const char* day);
 int getStartHour(const char* timeStr);
 
-void handleTimetableScreen(const char* userID, const char* userName);
+void handleTimetableScreen(const char* userName, const char* userID, const char* userPW);
 void handleSubjectList(const char* userID);
 
-void handleFriendsListScreen(const char* userID);
+void handleFriendsListScreen(const char* userName, const char* userID, const char* userPW);
 void handleAddFriendScreen(const char* friendID);
-void handleFriendTimetableScreen(const char* userName, const char* userID, const char* friendID, const char* friendName);
+void handleFriendTimetableScreen(const char* userName, const char* userID, const char* friendName, const char* friendID);
 
 // 전역 변수
 char userName[50] = { 0 };
@@ -103,7 +103,41 @@ void setColor(WORD color)
 // 랜덤 색깔 지정 함수
 int getRandomColor()
 {
+    int colors[] = 
+    {
+        1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14
+    };
+    int n = sizeof(colors) / sizeof(colors[0]);
 
+    return colors[rand() % n];
+}
+
+// 해시 함수 (FNV-1a 방식)
+static unsigned int fnv1a(const char* s) {
+    unsigned int h = 2166136261u;
+    while (*s) {
+        h ^= (unsigned char)(*s++);
+        h *= 16777619u;
+    }
+    return h;
+}
+
+// 과목별 고정 색상 함수
+int getColorForSubject(const char* subjectKey)
+{
+    int colors[] =
+    {
+        1, 2, 3, 4, 5, 6,
+        9, 10, 11, 12, 13, 14
+    };
+    int n = sizeof(colors) / sizeof(colors[0]);
+
+    if (subjectKey == NULL || subjectKey[0] == '\0') {
+        return colors[0]; // fallback
+    }
+
+    unsigned int h = fnv1a(subjectKey);
+    return colors[h % n];
 }
 
 // 박스 그리기 함수
@@ -647,11 +681,11 @@ void handleMainMenuScreen(const char* userName, const char* userID, const char* 
 
                 if (x >= 29 && x <= 57 && y >= 9 && y <= 11)
                 {
-                    handleTimetableScreen(userID, userName);
+                    handleTimetableScreen(userName, userID, userPW);
                 }
                 else if (x >= 29 && x <= 57 && y >= 13 && y <= 15)
                 {
-                    handleFriendsListScreen(userID);
+                    handleFriendsListScreen(userName, userID, userPW);
                 }
                 else if (x >= 29 && x <= 57 && y >= 17 && y <= 19)
                 {
@@ -664,7 +698,7 @@ void handleMainMenuScreen(const char* userName, const char* userID, const char* 
 }
 
 // 친구 목록 함수
-void handleFriendsListScreen(const char* userID)
+void handleFriendsListScreen(const char* userName, const char* userID, const char* userPW)
 {
     system("cls");
     drawBox(4, 1, 92, 47);
@@ -775,10 +809,10 @@ void handleFriendsListScreen(const char* userID)
 
                 if (isInside(x, y, left, top, right, bottom) && i < totalFriends)
                 {
-                    // ★ 친구 시간표 화면으로 이동
+                    // 친구 시간표 화면으로 이동
                     SetConsoleMode(hInput, prevMode);
                     handleFriendTimetableScreen(userID, userName,   // 내 계정
-                        friendsData[i].friendID, friendsData[i].friendName); // 친구
+                                                friendsData[i].friendName, friendsData[i].friendID); // 친구
                     return;
                 }
             }
@@ -815,7 +849,6 @@ void handleFriendsListScreen(const char* userID)
                 handleMainMenuScreen(userName, userID, userPW);
                 return;
             }
-            // ※ 박스 클릭 시 별도 동작 없음(요청대로)
         }
     }
 }
@@ -969,8 +1002,7 @@ void handleAddFriendScreen(const char* userID)
                 else if (isInside(clickX, clickY, 50, 30, 59, 30))
                 {
                     SetConsoleMode(hInput, prevMode);
-                    system("cls");
-                    handleFriendsListScreen(userID);
+                    handleFriendsListScreen(userName, userID, userPW);
                     return;
                 }
             }
@@ -981,7 +1013,7 @@ void handleAddFriendScreen(const char* userID)
 }
 
 // 시간표 함수
-void handleTimetableScreen(const char* userID, const char* userName)
+void handleTimetableScreen(const char* userName, const char* userID, const char* userPW)
 {
     system("cls");
     drawBox(4, 1, 92, 47);
@@ -1165,8 +1197,8 @@ void handleTimetableScreen(const char* userID, const char* userName)
                     int boxY = startY + hourIdx * cellHeight;
                     int boxHeight = cellHeight * duration;
 
-                    int randColor = getRandomColor();
-                    setColor(randColor);
+                    int fixedColor = getColorForSubject(sub.subjectCode);
+                    setColor(fixedColor);
                     drawBox(boxX, boxY, cellWidth, boxHeight);
                     gotoxy(boxX + 1, boxY + 1);
                     printf("%s", sub.subjectName);
@@ -1247,11 +1279,11 @@ void handleTimetableScreen(const char* userID, const char* userName)
 
                         // 화면 새로 로드
                         SetConsoleMode(hInput, prevMode);
-                        handleTimetableScreen(userID, userName);
+                        handleTimetableScreen(userName, userID, userPW);
                         return;
                     }
-                    else {
-                        // ── 평소 모드: 상세 팝업(기존 동작)
+                    else 
+                    {
                         system("cls");
                         drawBox(10, 8, 70, 20);
                         gotoxy(12, 10); printf("선택한 과목 상세");
@@ -1265,7 +1297,7 @@ void handleTimetableScreen(const char* userID, const char* userName)
                         _getch();
 
                         SetConsoleMode(hInput, prevMode);
-                        handleTimetableScreen(userID, userName);
+                        handleTimetableScreen(userName,userID, userPW);
                         return;
                     }
                 }
@@ -1282,7 +1314,6 @@ void handleTimetableScreen(const char* userID, const char* userName)
             else if (isInside(clickX, clickY, 42, 45, 42 + 11, 45)) 
             {
                 deleteMode = !deleteMode;
-                // 하단 안내 갱신
                 gotoxy(18, 43);
                 if (deleteMode) printf("삭제 모드: 삭제할 과목 칸을 클릭하세요. (다시 누르면 해제)");
                 else            printf("                                                  ");
@@ -1293,9 +1324,10 @@ void handleTimetableScreen(const char* userID, const char* userName)
             else if (isInside(clickX, clickY, 56, 45, 56 + 11, 45)) 
             {
                 SetConsoleMode(hInput, prevMode);
-                handleMainMenuScreen(userID, userName, userPW);
+                handleMainMenuScreen(userName, userID, userPW);
                 return;
             }
+        // 
         else if (record.EventType == KEY_EVENT && record.Event.KeyEvent.bKeyDown) 
             {
                 if (record.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE && deleteMode) 
@@ -1477,7 +1509,7 @@ void handleSubjectList(const char* userID)
                 // 시간표 목록 되돌아가기 버튼
                 else if (isInside(clickX, clickY, 60, 45, 75, 45)) 
                 {
-                    handleTimetableScreen(userID, userName);
+                    handleTimetableScreen(userName, userID, userPW);
                     break;
                 }
             }
@@ -1678,7 +1710,7 @@ int removeSubjectFromTimetable(const char* userID, const char* subjectCode, cons
 }
 
 // 친구 시간표 보기 (친구ID/친구이름을 표시, 뒤로가기는 내 친구목록으로)
-void handleFriendTimetableScreen(const char* userName, const char* userID, const char* friendID, const char* friendName)
+void handleFriendTimetableScreen(const char* userName, const char* userID, const char* friendName, const char* friendID)
 {
     system("cls");
     drawBox(4, 1, 92, 47);
@@ -1843,7 +1875,7 @@ void handleFriendTimetableScreen(const char* userName, const char* userID, const
             if (isInside(x, y, 30, 45, 40, 45)) 
             {
                 SetConsoleMode(hInput, prevMode);
-                handleFriendsListScreen(userID);
+                handleFriendsListScreen(userName, userID, userPW);
                 return;
             }
             // 메인메뉴
