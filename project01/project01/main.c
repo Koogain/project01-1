@@ -80,7 +80,6 @@ void gotoxy(int x, int y)
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }
 
-
 // 공백 텍스트 제거 함수
 void trimAll(char* str)
 {
@@ -167,6 +166,61 @@ void getTextInput(int x, int y, char* buffer, int maxLen)
     buffer[i] = '\0';
 }
 
+// 별 암호화 함수
+void getPasswordInputMasked(int x, int y, char* out, int maxLen, int mask)
+{
+    int len = 0;
+    out[0] = '\0';
+
+    while (1) {
+        int ch = _getch();
+
+        // 특수키(방향키 등) 프리픽스 처리
+        if (ch == 0 || ch == 224) { _getch(); continue; }
+
+        if (ch == 13) { // Enter
+            out[len] = '\0';
+            break;
+        }
+        else if (ch == 27) { // ESC → 입력 취소/초기화(원하면 동작 바꾸세요)
+            len = 0;
+            out[0] = '\0';
+            // 화면 클리어
+            gotoxy(x, y);
+            printf("                                ");
+            gotoxy(x, y);
+        }
+        else if (ch == 8) { // Backspace
+            if (len > 0) {
+                len--;
+                out[len] = '\0';
+                // 다시 그리기
+                gotoxy(x, y);
+                printf("                                ");
+                gotoxy(x, y);
+                if (mask) {
+                    for (int i = 0; i < len; ++i) putchar('*');
+                }
+                else {
+                    printf("%s", out);
+                }
+            }
+        }
+        else if (isprint(ch)) {
+            if (len < maxLen) {
+                out[len++] = (char)ch;
+                out[len] = '\0';
+                if (mask) {
+                    putchar('*');
+                }
+                else {
+                    putchar(ch);
+                }
+            }
+        }
+    }
+}
+
 // ------------------------------------------
 // 메인 활용 기능 부가 함수 (시간표 부가 함수)
 // ------------------------------------------
@@ -209,6 +263,15 @@ void handleLoginScreen(char* userName, char* userID, char* userPW)
     // 비밀번호 입력창
     gotoxy(31, 15); printf("비밀번호 : ");
     drawBox(31, 17, 35, 3);
+
+    // 비밀번호 입력창
+    gotoxy(31, 15); printf("비밀번호 : ");
+    drawBox(31, 17, 35, 3);
+
+    // ★ 별 표시 토글 버튼 (박스 오른쪽에 배치)
+    int maskPW = 1; // 기본: 별 표시 ON
+    gotoxy(67, 18);
+    printf("[ * ON ]"); // OFF일 땐 "[ * OFF ]" 로 바뀜
 
     // 버튼
     gotoxy(33, 24); printf("[  로그인  ]");
@@ -300,7 +363,26 @@ void handleLoginScreen(char* userName, char* userID, char* userPW)
                     gotoxy(32, 18);
                     printf("                                ");
                     gotoxy(32, 18);
-                    getTextInput(32, 18, userPW, 49);
+                    getPasswordInputMasked(32, 18, userPW, 49, maskPW);
+                }
+                // ★ 별 표시 토글 버튼 (좌표는 "[ * ON ]" 기준으로 여유있게)
+                else if (isInside(clickX, clickY, 67, 18, 76, 18)) {
+                    // 토글
+                    maskPW = !maskPW;
+                    gotoxy(67, 18);
+                    if (maskPW) printf("[ * ON ] ");
+                    else        printf("[ * OFF] ");
+
+                    // 이미 입력된 userPW 표시 갱신(현재 줄 지우고 다시 그리기)
+                    gotoxy(32, 18);
+                    printf("                                ");
+                    gotoxy(32, 18);
+                    if (maskPW) {
+                        for (int i = 0; userPW[i] != '\0'; ++i) putchar('*');
+                    }
+                    else {
+                        printf("%s", userPW);
+                    }
                 }
             }
         }
@@ -327,6 +409,9 @@ void handleSignupScreen(const char* userName, const char* userID, const char* us
 
     gotoxy(31, 21); printf("비밀번호: ");
     drawBox(31, 23, 30, 3);
+
+    int maskPW = 1; // 기본 ON
+    gotoxy(63, 24); printf("[ * ON ]"); // OFF면 "[ * OFF ]"로 표시
 
     gotoxy(33, 30); printf("[  확인  ]");
     gotoxy(50, 30); printf("[ 로그인 화면 ]");
@@ -402,7 +487,32 @@ void handleSignupScreen(const char* userName, const char* userID, const char* us
                     gotoxy(32, 24);
                     printf("                         ");
                     gotoxy(32, 24);
-                    getTextInput(32, 24, user.userPW, sizeof(user.userPW) - 1);
+                    // ★ 마스킹 상태에 따라 입력
+                    getPasswordInputMasked(32, 24, user.userPW, sizeof(user.userPW) - 1, maskPW);
+                }
+                // ★ 비밀번호 마스킹 토글 버튼
+                else if (isInside(clickX, clickY, 63, 24, 73, 24))
+                {
+                    // 토글
+                    maskPW = !maskPW;
+
+                    // 버튼 라벨 갱신
+                    gotoxy(63, 24);
+                    if (maskPW) printf("[ * ON ] ");
+                    else        printf("[ * OFF] ");
+
+                    // 현재 입력된 비번 표시 갱신
+                    gotoxy(32, 24);
+                    printf("                         ");
+                    gotoxy(32, 24);
+                    if (maskPW) 
+                    {
+                        for (int i = 0; user.userPW[i] != '\0'; ++i) putchar('*');
+                    }
+                    else 
+                    {
+                        printf("%s", user.userPW);
+                    }
                 }
                 // 확인 버튼 클릭
                 else if (isInside(clickX, clickY, 33, 30, 41, 30))
@@ -1118,49 +1228,85 @@ void handleTimetableScreen(const char* userID, const char* userName)
                     subBoxes[k].left, subBoxes[k].top,
                     subBoxes[k].right, subBoxes[k].bottom))
                 {
-                    // 상세 팝업
-                    system("cls");
-                    drawBox(10, 8, 70, 20);
-                    gotoxy(12, 10); printf("선택한 과목 상세");
-                    gotoxy(12, 12); printf("과목코드 : %s", subBoxes[k].sub.subjectCode);
-                    gotoxy(12, 13); printf("과목명   : %s", subBoxes[k].sub.subjectName);
-                    gotoxy(12, 14); printf("분류     : %s", subBoxes[k].sub.subCategory);
-                    gotoxy(12, 15); printf("교수명   : %s", subBoxes[k].sub.professorName);
-                    gotoxy(12, 16); printf("요일     : %s", subBoxes[k].sub.week);
-                    gotoxy(12, 17); printf("시간     : %s", subBoxes[k].sub.time);
-                    gotoxy(12, 19); printf("아무 키나 누르면 돌아갑니다...");
-                    _getch();
+                    if (deleteMode) {
+                        // ── 삭제 모드: Timetable에서 해당 코드 제거
+                        const char* codeToRemove = subBoxes[k].sub.subjectCode;
+                        int rc = removeSubjectFromTimetable(
+                            userID, codeToRemove,
+                            "C:\\Users\\Koomy\\source\\repos\\project01\\Timetable.txt"
+                        );
 
-                    // 돌아오면 시간표 전체를 다시 그리기 위해 재귀 호출 또는 함수 재호출
-                    // (간단히 재호출)
-                    SetConsoleMode(hInput, prevMode);
-                    handleTimetableScreen(userID, userName);
-                    return;
+                        system("cls");
+                        drawBox(20, 12, 50, 7);
+                        gotoxy(22, 14);
+                        if (rc == 0)      printf("과목이 시간표에서 삭제되었습니다.");
+                        else if (rc == 1) printf("해당 과목이 시간표에 없습니다.");
+                        else              printf("삭제 중 오류가 발생했습니다.(%d)", rc);
+                        gotoxy(22, 16); printf("아무 키나 누르면 돌아갑니다...");
+                        _getch();
+
+                        // 화면 새로 로드
+                        SetConsoleMode(hInput, prevMode);
+                        handleTimetableScreen(userID, userName);
+                        return;
+                    }
+                    else {
+                        // ── 평소 모드: 상세 팝업(기존 동작)
+                        system("cls");
+                        drawBox(10, 8, 70, 20);
+                        gotoxy(12, 10); printf("선택한 과목 상세");
+                        gotoxy(12, 12); printf("과목코드 : %s", subBoxes[k].sub.subjectCode);
+                        gotoxy(12, 13); printf("과목명   : %s", subBoxes[k].sub.subjectName);
+                        gotoxy(12, 14); printf("분류     : %s", subBoxes[k].sub.subCategory);
+                        gotoxy(12, 15); printf("교수명   : %s", subBoxes[k].sub.professorName);
+                        gotoxy(12, 16); printf("요일     : %s", subBoxes[k].sub.week);
+                        gotoxy(12, 17); printf("시간     : %s", subBoxes[k].sub.time);
+                        gotoxy(12, 19); printf("아무 키나 누르면 돌아갑니다...");
+                        _getch();
+
+                        SetConsoleMode(hInput, prevMode);
+                        handleTimetableScreen(userID, userName);
+                        return;
+                    }
                 }
             }
 
-            // 버튼: 폭을 넉넉히(라벨 길이 고려)
+            // 수업추가
             if (isInside(clickX, clickY, 28, 45, 28 + 11, 45)) 
             {
                 SetConsoleMode(hInput, prevMode);
                 handleSubjectList(userID);
                 return;
             }
+            // 수업삭제: 삭제 모드 토글
             else if (isInside(clickX, clickY, 42, 45, 42 + 11, 45)) 
             {
-                deleteMode = 1;
-                // 하단 안내
-                gotoxy(20, 43);
-                printf("삭제 모드: 삭제할 과목 칸을 클릭하세요. (취소하려면 [메인메뉴] 또는 ESC)");
+                deleteMode = !deleteMode;
+                // 하단 안내 갱신
+                gotoxy(18, 43);
+                if (deleteMode) printf("삭제 모드: 삭제할 과목 칸을 클릭하세요. (다시 누르면 해제)");
+                else            printf("                                                  ");
                 fflush(stdout);
-                continue;
+                continue; // 화면 유지하고 클릭 대기
             }
+            // 메인메뉴
             else if (isInside(clickX, clickY, 56, 45, 56 + 11, 45)) 
             {
                 SetConsoleMode(hInput, prevMode);
                 handleMainMenuScreen(userID, userName, userPW);
                 return;
             }
+        else if (record.EventType == KEY_EVENT && record.Event.KeyEvent.bKeyDown) 
+            {
+                if (record.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE && deleteMode) 
+                {
+                    deleteMode = 0;
+                    gotoxy(18, 43); printf("                                                  ");
+                    fflush(stdout);
+                    // 계속 대기
+                }
+            }
+
         }
     }
 }
@@ -1530,7 +1676,6 @@ int removeSubjectFromTimetable(const char* userID, const char* subjectCode, cons
     fclose(fp);
     return 0;
 }
-
 
 // 친구 시간표 보기 (친구ID/친구이름을 표시, 뒤로가기는 내 친구목록으로)
 void handleFriendTimetableScreen(const char* userName, const char* userID, const char* friendID, const char* friendName)
