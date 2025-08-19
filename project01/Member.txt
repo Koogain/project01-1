@@ -4,3 +4,4 @@ userNAME: dddd / userID: dddd / userPW: dddd
 userNAME: 1 / userID: 1 / userPW: 1
 userNAME: aa / userID: aa / userPW: aa
 userNAME: gmg1234 / userID: gmg1234 / userPW: 1234
+userNAME: bukbuk / userID: bukbuk / userPW: 1

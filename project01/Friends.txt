@@ -1,7 +1,3 @@
-userID: cloud0527 / friendName: skyKOO / friendID: sky0527 / friendPin: 1
+userID: cloud0527 / friendName: skyKOO / friendID: sky0527 / friendPin: 0
 userID: sky0527 / friendName: cloudCHOI / friendID: cloud0527 / friendPin: 0
-userID: cloud0527 / friendName: dddd / friendID: dddd / friendPin: 0
-userID: dddd / friendName: cloud0527 / friendID: cloud0527 / friendPin: 0
-userID: 1 / friendName: dddd / friendID: dddd / friendPin: 0
-userID: 1 / friendName: cloud / friendID: cloud0527 / friendPin: 0
-userID: aa / friendName: cloud / friendID: cloud0527 / friendPin: 0
+userID: 1 / friendName: cloudCHOI  / friendID: cloud0527 / friendPin: 0
